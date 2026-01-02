@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق القرآن، الأذكار، المتون والسيرة - Mohamed Agove</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #006633;
+            --secondary: #d4ac0d;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+            --adhkar-color: #5e35b1;
+            --mutoon-color: #5d4037;
+            --aqidah-color: #1565c0; /* لون العقيدة أزرق داكن */
+            --seerah-color: #c62828; /* لون السيرة أحمر داكن */
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: var(--white);
+            width: 100%;
+            max-width: 700px;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+            position: relative;
+            min-height: 650px; /* زيادة الارتفاع لاستيعاب عارض PDF */
+            margin-bottom: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 { color: var(--primary); margin: 0 0 15px 0; font-weight: 800; font-size: 24px; }
+
+        /* قسم اليوميات */
+        .daily-section {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 15px;
+            padding: 12px;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        .daily-label { font-size: 11px; color: var(--primary); font-weight: bold; background: #fff; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 5px; border: 1px solid #c8e6c9; }
+        .daily-text { font-family: 'Amiri'; font-size: 16px; line-height: 1.5; color: #2e7d32; margin: 0; font-weight: bold; }
+
+        /* القوائم والأزرار */
+        select {
+            width: 100%; padding: 10px; border: 2px solid #e0e0e0;
+            border-radius: 12px; font-size: 15px; margin-bottom: 10px;
+            font-family: 'Tajawal'; outline: none; background: #fff;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-main {
+            border: none; padding: 10px; border-radius: 15px; cursor: pointer;
+            font-family: 'Tajawal'; font-size: 15px; font-weight: bold;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 5px; transition: transform 0.2s; box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            min-height: 75px;
+        }
+        .btn-main:active { transform: scale(0.97); }
+
+        .btn-quiz { grid-column: span 2; background: var(--primary); color: white; font-size: 18px; }
+        .btn-read { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+        .btn-listen { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .btn-adhkar { background: #ede7f6; color: var(--adhkar-color); border: 1px solid #d1c4e9; }
+        .btn-mutoon { background: #efebe9; color: var(--mutoon-color); border: 1px solid #d7ccc8; }
+        
+        /* الأزرار الجديدة */
+        .btn-aqidah { background: #e3f2fd; color: var(--aqidah-color); border: 1px solid #bbdefb; }
+        .btn-seerah { background: #ffebee; color: var(--seerah-color); border: 1px solid #ffcdd2; grid-column: span 2; }
+
+        .screen { display: none; animation: fadeIn 0.4s; flex-grow: 1; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-back {
+            background: #f5f5f5; color: #333; border: none; padding: 10px 20px;
+            border-radius: 20px; cursor: pointer; margin-bottom: 15px; font-weight: bold; width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        /* المسابقة */
+        .verse-card { font-family: 'Amiri', serif; font-size: 24px; line-height: 2.2; background: #fffbe6; border: 2px solid #f9e79f; padding: 20px; border-radius: 15px; margin: 20px 0; color: #333; }
+        .missing { color: #d35400; border-bottom: 2px dashed #d35400; font-weight: bold; padding: 0 5px; }
+        .options-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .choice-btn { background: white; border: 2px solid #eee; padding: 12px; border-radius: 12px; font-size: 17px; font-family: 'Amiri'; cursor: pointer; }
+        .correct { background: #27ae60 !important; color: white !important; }
+        .wrong { background: #c0392b !important; color: white !important; }
+        .timer-bar { width: 100%; height: 6px; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+        .timer-fill { height: 100%; background: var(--secondary); width: 100%; transition: width 1s linear; }
+
+        /* الأذكار */
+        .dhikr-box { background: #fff; border: 2px solid #d1c4e9; padding: 20px; border-radius: 20px; margin-top: 10px; cursor: pointer; user-select: none; position: relative; }
+        .dhikr-text { font-family: 'Amiri'; font-size: 22px; line-height: 2; color: #4527a0; margin-bottom: 20px; text-align: justify; }
+        .counter { width: 70px; height: 70px; background: var(--adhkar-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; margin: 0 auto; box-shadow: 0 5px 15px rgba(94, 53, 177, 0.3); transition: 0.3s; }
+        .counter.done { background: var(--primary); transform: scale(1.1); }
+        .adhkar-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .adhkar-item { padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; display: flex; align-items: center; gap: 15px; font-weight: bold; cursor: pointer; }
+        .icon { width: 35px; height: 35px; background: #ddd; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; margin-left: 10px; }
+
+        /* عارض PDF */
+        .pdf-container {
+            width: 100%;
+            height: 550px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #eee;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .footer { text-align: center; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; width: 100%; }
+        .footer-quote { color: var(--primary); font-size: 16px; font-weight: bold; margin-bottom: 5px; font-family: 'Amiri'; }
+        .footer-sign { color: #777; font-size: 13px; }
+        .author { color: var(--secondary); font-weight: bold; }
+        .loader { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 1. الرئيسية -->
+    <div id="home" class="screen active">
+        <h1>رفيق المسلم</h1>
+        
+        <div class="daily-section">
+            <div style="margin-bottom:10px;">
+                <span class="daily-label">✨ حديث اليوم</span>
+                <p id="daily-hadith" class="daily-text">جاري التحميل...</p>
+            </div>
+            <div style="border-top:1px dashed #c8e6c9; padding-top:10px;">
+                <span class="daily-label">💡 معلومة عن النبي ﷺ</span>
+                <p id="daily-fact" class="daily-text">جاري التحميل...</p>
+            </div>
+        </div>
+
+        <div class="select-group">
+            <select id="surahSelect"><option>-- اختر السورة --</option></select>
+            <select id="reciterSelect">
+                <option value="Alafasy_128kbps">مشاري العفاسي</option>
+                <option value="Husary_128kbps">محمود خليل الحصري</option>
+                <option value="Minshawy_Mujawwad_192kbps">محمد صديق المنشاوي</option>
+                <option value="Abdul_Basit_Mujawwad_128kbps">عبدالباسط عبدالصمد</option>
+                <option value="Saood_ash-Shuraym_128kbps">سعود الشريم</option>
+            </select>
+        </div>
+
+        <div class="action-grid">
+            <button class="btn-main btn-quiz" onclick="loadMode('quiz')">
+                <span style="font-size:20px">📝</span> مسابقة القرآن
+            </button>
+            <button class="btn-main btn-read" onclick="loadMode('read')">
+                <span style="font-size:20px">📖</span> قراءة السورة
+            </button>
+            <button class="btn-main btn-listen" onclick="loadMode('listen')">
+                <span style="font-size:20px">🎧</span> استماع
+            </button>
+            <button class="btn-main btn-adhkar" onclick="showAdhkarMenu()">
+                <span style="font-size:20px">📿</span> الأذكار والأدعية
+            </button>
+            
+            <button class="btn-main btn-mutoon" onclick="showMutoonMenu()">
+                <span style="font-size:20px">📚</span> المتون الفقهية
+            </button>
+            <button class="btn-main btn-aqidah" onclick="showAqidahMenu()">
+                <span style="font-size:20px">🕋</span> العقيدة
+            </button>
+            <button class="btn-main btn-seerah" onclick="showSeerahMenu()">
+                <span style="font-size:20px">📜</span> السيرة النبوية
+            </button>
+        </div>
+        <div id="loader" class="loader"></div>
+    </div>
+
+    <!-- 2. المسابقة -->
+    <div id="quiz" class="screen">
+        <button class="btn-back" onclick="goHome()">↩ القائمة الرئيسية</button>
+        <div style="display:flex; justify-content:space-between; color:#666; font-size:14px;">
+            <span id="quiz-surah-name"></span>
+            <span id="quiz-progress"></span>
+        </div>
+        <div class="timer-bar"><div id="timer" class="timer-fill"></div></div>
+        <div id="q-box" class="verse-card"></div>
+        <div id="audio-hint" style="font-size:12px; color:var(--primary); opacity:0; transition:0.3s">🔊 استمع للتلاوة...</div>
+        <div id="opts-box" class="options-area"></div>
+    </div>
+
+    <!-- 3. القراءة -->
+    <div id="read" class="screen">
+        <button class="btn-back" onclick="goHome()">↩ القائمة الرئيسية</button>
+        <h2 id="read-title" style="color:var(--primary); margin-bottom:10px;"></h2>
+        <div id="read-content" style="font-family:'Amiri'; font-size:24px; line-height:2.3; text-align:justify; background:#fffbe6; padding:15px; border-radius:10px; max-height:450px; overflow-y:auto; border:1px solid #ffe082;"></div>
+    </div>
+
+    <!-- 4. الاستماع -->
+    <div id="listen" class="screen">
+        <button class="btn-back" onclick="stopAudio(); goHome()">↩ القائمة الرئيسية</button>
+        <h3 id="listen-status" style="color:var(--primary)">جاري التحميل...</h3>
+        <div id="listen-text" class="verse-card" style="font-size:22px;"></div>
+        <button class="btn-main btn-listen" onclick="stopAudio()" style="width:100%; margin-top:20px;">إيقاف التلاوة ⏹</button>
+    </div>
+
+    <!-- 5. قوائم الأذكار -->
+    <div id="adhkar-menu" class="screen">
+        <button class="btn-back" onclick="goHome()">↩ الرئيسية</button>
+        <h2 style="color:var(--adhkar-color)">حصن المسلم</h2>
+        <div class="adhkar-grid">
+            <div class="adhkar-item" onclick="startAdhkar('morning')"><div class="icon" style="background:var(--adhkar-color)">☀</div> أذكار الصباح</div>
+            <div class="adhkar-item" onclick="startAdhkar('evening')"><div class="icon" style="background:var(--adhkar-color)">🌙</div> أذكار المساء</div>
+            <div class="adhkar-item" onclick="startAdhkar('sleep')"><div class="icon" style="background:var(--adhkar-color)">🛌</div> أذكار النوم</div>
+            <div class="adhkar-item" onclick="startAdhkar('prayer')"><div class="icon" style="background:var(--adhkar-color)">🕌</div> أذكار الصلاة</div>
+            <div class="adhkar-item" onclick="startAdhkar('duas')"><div class="icon" style="background:var(--adhkar-color)">🤲</div> أدعية مختارة</div>
+        </div>
+    </div>
+
+    <!-- 6. عرض الذكر -->
+    <div id="adhkar-view" class="screen">
+        <button class="btn-back" onclick="showAdhkarMenu()">↩ قائمة الأذكار</button>
+        <div style="color:#777; margin-bottom:5px; font-size:14px;"><span id="d-title"></span> (<span id="d-prog"></span>)</div>
+        <div class="dhikr-box" onclick="countDhikr()">
+            <div id="d-text" class="dhikr-text"></div>
+            <div style="font-size:13px; color:#999; margin-bottom:10px;">(اضغط في أي مكان للعد)</div>
+            <div id="d-count" class="counter"></div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn-back" onclick="navDhikr(-1)">السابق</button>
+            <button class="btn-back" onclick="navDhikr(1)">التالي</button>
+        </div>
+    </div>
+
+    <!-- 7. قوائم الملفات (متون - عقيدة - سيرة) -->
+    
+    <!-- قائمة المتون -->
+    <div id="mutoon-menu" class="screen">
+        <button class="btn-back" onclick="goHome()">↩ الرئيسية</button>
+        <h2 style="color:var(--mutoon-color)">المتون الفقهية</h2>
+        <div class="adhkar-grid">
+            <div class="adhkar-item" style="border-color:#bcaaa4" onclick="openInternalPdf('akhdari.pdf', 'mutoon-menu')">
+                <div class="icon" style="background:var(--mutoon-color)">📘</div> متن الأخضري
+            </div>
+            <div class="adhkar-item" style="border-color:#bcaaa4" onclick="openInternalPdf('ibn_ashir.pdf', 'mutoon-menu')">
+                <div class="icon" style="background:var(--mutoon-color)">📗</div> متن ابن عاشر
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة العقيدة -->
+    <div id="aqidah-menu" class="screen">
+        <button class="btn-back" onclick="goHome()">↩ الرئيسية</button>
+        <h2 style="color:var(--aqidah-color)">كتب العقيدة</h2>
+        <div class="adhkar-grid">
+            <div class="adhkar-item" style="border-color:#90caf9" onclick="openInternalPdf('jawharah.pdf', 'aqidah-menu')">
+                <div class="icon" style="background:var(--aqidah-color)">💎</div> جوهرة التوحيد
+            </div>
+            <div class="adhkar-item" style="border-color:#90caf9" onclick="openInternalPdf('wasila.pdf', 'aqidah-menu')">
+                <div class="icon" style="background:var(--aqidah-color)">🌟</div> وسيلة السعادة
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة السيرة -->
+    <div id="seerah-menu" class="screen">
+        <button class="btn-back" onclick="goHome()">↩ الرئيسية</button>
+        <h2 style="color:var(--seerah-color)">السيرة النبوية</h2>
+        <div class="adhkar-grid">
+            <div class="adhkar-item" style="border-color:#ef9a9a" onclick="openInternalPdf('raheeq.pdf', 'seerah-menu')">
+                <div class="icon" style="background:var(--seerah-color)">🌺</div> الرحيق المختوم
+            </div>
+            <div class="adhkar-item" style="border-color:#ef9a9a" onclick="openInternalPdf('seerah.pdf', 'seerah-menu')">
+                <div class="icon" style="background:var(--seerah-color)">📜</div> سيرة النبي
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. عارض PDF الداخلي -->
+    <div id="pdf-viewer" class="screen">
+        <button class="btn-back" id="pdf-back-btn" onclick="goHome()">↩ رجوع للقائمة</button>
+        <div class="pdf-container">
+            <iframe id="pdf-frame" src=""></iframe>
+        </div>
+        <p style="font-size:12px; color:gray; margin-top:5px;">يتم عرض الملف داخل الموقع</p>
+    </div>
+
+    <!-- 9. النتيجة -->
+    <div id="result" class="screen">
+        <h2>النتيجة النهائية</h2>
+        <h1 id="final-score" style="font-size:60px; color:var(--primary); margin:20px 0;"></h1>
+        <p id="result-msg" style="color:#555; font-size:18px;"></p>
+        <button class="btn-back" onclick="goHome()">العودة للرئيسية</button>
+    </div>
+
+</div>
+
+<!-- التذييل -->
+<footer class="footer">
+    <div class="footer-quote">✨ بِالقُرآنِ نَحيَا، وَعَلَيهِ نَمُوت، وَبِهِ نَلقَى الله ✨</div>
+    <div class="footer-sign">
+        لا تنسونا من صالح الدعاء<br>
+        <span class="author">Mohamed Dah Agove</span>
+    </div>
+</footer>
+
+<audio id="player"></audio>
+
+<script>
+    // === 1. بيانات اليوم (خوارزمية اليوم لعدم التكرار) ===
+    const hadiths = [
+        "قال رسول الله ﷺ: «خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ».",
+        "قال رسول الله ﷺ: «الْمَاهِرُ بِالْقُرْآنِ مَعَ السَّفَرَةِ الْكِرَامِ الْبَرَرَةِ».",
+        "قال رسول الله ﷺ: «اقْرَءُوا الْقُرْآنَ فَإِنَّهُ يَأْتِي يَوْمَ الْقِيَامَةِ شَفِيعًا لِأَصْحَابِهِ».",
+        "قال رسول الله ﷺ: «مَنْ صَلَّى عَلَيَّ صَلَاةً صَلَّى اللَّهُ عَلَيْهِ بِهَا عَشْرًا».",
+        "قال رسول الله ﷺ: «الدِّينُ النَّصِيحَةُ».",
+        "قال رسول الله ﷺ: «مَنْ يُرِدِ اللَّهُ بِهِ خَيْرًا يُفَقِّهْهُ فِي الدِّينِ».",
+        "قال رسول الله ﷺ: «لا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفسه».",
+        "قال رسول الله ﷺ: «الكلمة الطيبة صدقة»."
+    ];
+    // تم تصحيح معلومة أول غزوة
+    const facts = [
+        "أول غزوة غزاها النبي ﷺ هي غزوة بدر الكبرى.",
+        "توفي أبوه عبد الله قبل مولده ﷺ.",
+        "ماتت أمه آمنة بنت وهب وعمره 6 سنوات.",
+        "عدد أبناء النبي ﷺ 7 (3 ذكور و 4 إناث).",
+        "هاجر النبي ﷺ من مكة إلى المدينة وعمره 53 سنة.",
+        "نزل الوحي على النبي ﷺ وعمره 40 سنة في غار حراء.",
+        "آخر زوجات النبي ﷺ وفاة هي أم سلمة رضي الله عنها.",
+        "كان النبي ﷺ أمياً لا يقرأ ولا يكتب، وهذا من دلائل إعجاز نبوته."
+    ];
+
+    // === 2. بيانات الأذكار الكاملة (بدون اختصار) ===
+    const adhkarDB = {
+        morning: [
+            { t: "أَعُوذُ بِاللهِ مِنْ الشَّيْطَانِ الرَّجِيمِ: ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلْحَيُّ ٱلْقَيُّومُ ۚ لَا تَأْخُذُهُۥ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُۥ مَا فِى ٱلسَّمَٰوَٰتِ وَمَا فِى ٱلْأَرْضِ ۗ مَن ذَا ٱلَّذِى يَشْفَعُ عِندَهُۥٓ إِلَّا بِإِذْنِهِۦ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَىْءٍ مِّنْ عِلْمِهِۦٓ إِلَّا بِمَا شَآءَ ۚ وَسِعَ كُرْسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلْأَرْضَ ۖ وَلَا يَـُٔودُهُۥ حِفْظُهُمَا ۚ وَهُوَ ٱلْعَلِىُّ ٱلْعَظِيمُ.", c: 1 },
+            { t: "قِرَاءَةُ سُورَةِ الإِخْلَاصِ، وَالفَلَقِ، وَالنَّاسِ.", c: 3 },
+            { t: "أَصْـبَحْنا وَأَصْـبَحَ المُـلْكُ لله وَالحَمدُ لله، لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلْكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير، رَبِّ أسْـأَلُـكَ خَـيرَ ما في هـذا اليوم وَخَـيرَ ما بَعْـدَه، وَأَعـوذُ بِكَ مِنْ شَـرِّ ما في هـذا اليوم وَشَرِّ ما بَعْـدَه، رَبِّ أَعـوذُ بِكَ مِنَ الْكَسَـلِ وَسـوءِ الْكِـبَر، رَبِّ أَعـوذُ بِكَ مِنْ عَـذابٍ في النّـارِ وَعَـذابٍ في القَـبْر.", c: 1 },
+            { t: "اللّهـمَّ أَنْتَ رَبِّـي لا إلهَ إلاّ أَنْتَ، خَلَقْتَنـي وَأَنا عَبْـدُك، وَأَنا عَلـى عَهْـدِكَ وَوَعْـدِكَ ما اسْتَـطَعْـت، أَعـوذُ بِكَ مِنْ شَـرِّ ما صَنَـعْت، أَبـوءُ لَـكَ بِنِعْـمَتِـكَ عَلَـيَّ وَأَبـوءُ بِذَنْـبي فَاغْفـِرْ لي فَإِنَّـهُ لا يَغْـفِرُ الذُّنـوبَ إِلاّ أَنْتَ.", c: 1 },
+            { t: "بِسـمِ اللهِ الذي لا يَضُـرُّ مَعَ اسمِـهِ شَيءٌ في الأرْضِ وَلا في السّمـاءِ وَهـوَ السّمـيعُ العَلـيم.", c: 3 },
+            { t: "رَضيـتُ بِاللهِ رَبَّـاً وَبِالإسْلامِ ديـناً وَبِمُحَـمَّدٍ صلى الله عليه وسلم نَبِيّـاً.", c: 3 },
+            { t: "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.", c: 1 },
+            { t: "سُبْحـانَ اللهِ وَبِحَمْـدِهِ.", c: 100 },
+            { t: "لَا إلَه إلّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءِ قَدِير.", c: 100 }
+        ],
+        evening: [
+            { t: "أَعُوذُ بِاللهِ مِنْ الشَّيْطَانِ الرَّجِيمِ: (آية الكرسي كاملة).", c: 1 },
+            { t: "قِرَاءَةُ سُورَةِ الإِخْلَاصِ، وَالفَلَقِ، وَالنَّاسِ.", c: 3 },
+            { t: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ لاَ إِلَهَ إِلاَّ اللَّهُ وَحْدَهُ لاَ شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ.", c: 1 },
+            { t: "اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ الْمَصِيرُ.", c: 1 },
+            { t: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.", c: 3 }
+        ],
+        sleep: [
+            { t: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا.", c: 1 },
+            { t: "قراءة الإخلاص والمعوذتين، ثم يمسح بهما ما استطاع من جسده.", c: 3 },
+            { t: "سُبْحَانَ اللَّهِ (33)، وَالْحَمْدُ لِلَّهِ (33)، وَاللَّهُ أَكْبَرُ (34).", c: 1 },
+            { t: "آية الكرسي (مرة واحدة).", c: 1 }
+        ],
+        prayer: [
+            { t: "أَسْتَغْفِرُ اللَّهَ (ثَلاثاً) اللَّهُمَّ أَنْتَ السَّلاَمُ، وَمِنْكَ السَّلاَمُ، تَبَارَكْتَ يَا ذَا الْجَلاَلِ وَالإِكْرَامِ.", c: 1 },
+            { t: "سُبْحَانَ اللهِ.", c: 33 },
+            { t: "الْحَمْدُ لِلَّهِ.", c: 33 },
+            { t: "اللَّهُ أَكْبَرُ.", c: 33 },
+            { t: "لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلْكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير (تمام المائة).", c: 1 }
+        ],
+        duas: [
+            { t: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.", c: 1 },
+            { t: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى.", c: 1 },
+            { t: "يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ.", c: 1 },
+            { t: "رَبِّ اشْرَحْ لِي صَدْرِي * وَيَسِّرْ لِي أَمْرِي.", c: 1 }
+        ]
+    };
+
+    // === 3. بيانات السور ===
+    const surahs = ["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس","التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البيينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
+
+    // === المتغيرات والتهيئة ===
+    const selSurah = document.getElementById('surahSelect');
+    const audioObj = document.getElementById('player');
+    
+    let verses = [];
+    let quizData = [];
+    let currentQ = 0;
+    let score = 0;
+    let timerInterval;
+    let activeAdhkar = [];
+    let adhkarIdx = 0;
+    let adhkarCount = 0;
+
+    window.onload = function() {
+        surahs.forEach((s, i) => {
+            let opt = document.createElement('option');
+            opt.value = i + 1;
+            opt.text = `${i+1}. ${s}`;
+            selSurah.appendChild(opt);
+        });
+        
+        // خوارزمية حديث اليوم (بدون تكرار)
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayOfYear = Math.floor(diff / oneDay);
+
+        const hIndex = dayOfYear % hadiths.length;
+        const fIndex = dayOfYear % facts.length;
+
+        document.getElementById('daily-hadith').innerText = hadiths[hIndex];
+        document.getElementById('daily-fact').innerText = facts[fIndex];
+    };
+
+    // === دوال التنقل ===
+    function show(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        stopAudio();
+    }
+    function goHome() { show('home'); }
+    function showAdhkarMenu() { show('adhkar-menu'); }
+    function showMutoonMenu() { show('mutoon-menu'); }
+    function showAqidahMenu() { show('aqidah-menu'); }
+    function showSeerahMenu() { show('seerah-menu'); }
+
+    // === تحميل القرآن ===
+    async function loadMode(mode) {
+        const id = selSurah.value;
+        const reciter = document.getElementById('reciterSelect').value;
+        
+        if(selSurah.selectedIndex === 0) { alert("الرجاء اختيار السورة"); return; }
+
+        document.getElementById('loader').style.display = 'block';
+        document.querySelector('.action-grid').style.display = 'none';
+
+        try {
+            // جلب 300 آية
+            const res = await fetch(`https://api.quran.com/api/v4/quran/verses/uthmani?chapter_number=${id}&per_page=300`);
+            const data = await res.json();
+            verses = data.verses;
+            
+            document.getElementById('loader').style.display = 'none';
+            document.querySelector('.action-grid').style.display = 'grid';
+
+            if(mode === 'read') startReadMode(id);
+            else if(mode === 'listen') startListenMode(id, reciter);
+            else if(mode === 'quiz') startQuizMode(id, reciter);
+
+        } catch (e) {
+            alert("حدث خطأ في الاتصال، حاول مرة أخرى.");
+            document.getElementById('loader').style.display = 'none';
+            document.querySelector('.action-grid').style.display = 'grid';
+        }
+    }
+
+    // === 1. المسابقة (100 آية) ===
+    function startQuizMode(surahId, reciter) {
+        show('quiz');
+        quizData = [];
+        let allWords = [];
+        verses.forEach(v => allWords.push(...v.text_uthmani.split(" ")));
+
+        // اختيار 100 آية
+        let poolSize = (verses.length > 100) ? 100 : verses.length;
+        let sampleVerses = verses.sort(() => 0.5 - Math.random()).slice(0, poolSize);
+
+        sampleVerses.forEach(v => {
+            let words = v.text_uthmani.split(" ");
+            if(words.length < 3) return;
+
+            let r = Math.floor(Math.random() * (words.length - 1)) + 1;
+            let missing = words[r];
+            
+            let options = [missing];
+            while(options.length < 3) {
+                let w = allWords[Math.floor(Math.random() * allWords.length)];
+                if(!options.includes(w) && w !== missing && w.length > 2) options.push(w);
+            }
+
+            let vNum = v.verse_key.split(":")[1];
+            let url = `https://everyayah.com/data/${reciter}/${pad(surahId)}${pad(vNum)}.mp3`;
+
+            quizData.push({
+                part1: words.slice(0, r).join(" "),
+                missing: missing,
+                part2: words.slice(r+1).join(" "),
+                options: options.sort(() => 0.5 - Math.random()),
+                audio: url
+            });
+        });
+
+        currentQ = 0;
+        score = 0;
+        document.getElementById('quiz-surah-name').innerText = "سورة " + surahs[surahId-1];
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        if(currentQ >= quizData.length) {
+            showResult();
+            return;
+        }
+
+        document.getElementById('audio-hint').style.opacity = '0';
+        let q = quizData[currentQ];
+        document.getElementById('quiz-progress').innerText = `سؤال ${currentQ + 1} من ${quizData.length}`;
+        
+        document.getElementById('q-box').innerHTML = 
+            `${q.part1} <span class="missing">(.....)</span> ${q.part2}`;
+
+        let div = document.getElementById('opts-box');
+        div.innerHTML = '';
+        
+        q.options.forEach(opt => {
+            let btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, opt, q.missing, q.audio);
+            div.appendChild(btn);
+        });
+
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        let bar = document.getElementById('timer');
+        bar.style.width = "100%";
+        let timeLeft = 20;
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            bar.style.width = (timeLeft / 20) * 100 + "%";
+            if(timeLeft <= 0) {
+                checkAnswer(null, null, quizData[currentQ].missing, quizData[currentQ].audio);
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(btn, selected, correct, audioUrl) {
+        clearInterval(timerInterval);
+        let btns = document.querySelectorAll('.choice-btn');
+        btns.forEach(b => b.disabled = true);
+
+        let qBox = document.getElementById('q-box');
+        let q = quizData[currentQ];
+
+        if(selected === correct) {
+            score++;
+            if(btn) btn.classList.add('correct');
+            qBox.innerHTML = `${q.part1} <span style="color:#27ae60">${correct}</span> ${q.part2}`;
+        } else {
+            if(btn) btn.classList.add('wrong');
+            btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+            qBox.innerHTML = `${q.part1} <span style="color:#c0392b">${correct}</span> ${q.part2}`;
+        }
+
+        document.getElementById('audio-hint').style.opacity = '1';
+        audioObj.src = audioUrl;
+        audioObj.play();
+        
+        audioObj.onended = () => {
+            currentQ++;
+            nextQuestion();
+        };
+        
+        audioObj.onerror = () => { setTimeout(() => { currentQ++; nextQuestion(); }, 1500); }
+    }
+
+    function showResult() {
+        show('result');
+        let percentage = Math.round((score / quizData.length) * 100);
+        document.getElementById('final-score').innerText = percentage + "%";
+        document.getElementById('result-msg').innerText = percentage >= 80 ? "أحسنت! أداء ممتاز." : "جيد، راجع السورة وحاول مرة أخرى.";
+    }
+
+    // === 2. القراءة ===
+    function startReadMode(id) {
+        show('read');
+        document.getElementById('read-title').innerText = "سورة " + surahs[id-1];
+        let html = "";
+        verses.forEach(v => {
+            html += `${v.text_uthmani} <span style="color:#ddd; font-size:18px;">﴿${v.verse_key.split(":")[1]}﴾</span> `;
+        });
+        document.getElementById('read-content').innerHTML = html;
+    }
+
+    // === 3. الاستماع ===
+    function startListenMode(id, reciter) {
+        show('listen');
+        playVerseSequence(0, id, reciter);
+    }
+
+    function playVerseSequence(idx, surahId, reciter) {
+        if(idx >= verses.length) {
+            document.getElementById('listen-status').innerText = "تمت التلاوة";
+            return;
+        }
+        let v = verses[idx];
+        let vNum = v.verse_key.split(":")[1];
+        
+        document.getElementById('listen-status').innerText = `يتلو الآية: ${vNum}`;
+        document.getElementById('listen-text').innerText = v.text_uthmani;
+        
+        let url = `https://everyayah.com/data/${reciter}/${pad(surahId)}${pad(vNum)}.mp3`;
+        audioObj.src = url;
+        audioObj.play();
+        
+        audioObj.onended = () => playVerseSequence(idx + 1, surahId, reciter);
+    }
+
+    function stopAudio() {
+        audioObj.pause();
+        audioObj.onended = null;
+    }
+
+    // === 4. الأذكار ===
+    function startAdhkar(type) {
+        activeAdhkar = adhkarDB[type];
+        adhkarIdx = 0;
+        show('adhkar-view');
+        loadDhikrUI();
+    }
+
+    function loadDhikrUI() {
+        if(adhkarIdx >= activeAdhkar.length) {
+            alert("انتهت الأذكار، تقبل الله منكم");
+            show('adhkar-menu');
+            return;
+        }
+        let d = activeAdhkar[adhkarIdx];
+        adhkarCount = d.c;
+        
+        document.getElementById('d-title').innerText = "الذكر";
+        document.getElementById('d-prog').innerText = `${adhkarIdx + 1} / ${activeAdhkar.length}`;
+        document.getElementById('d-text').innerText = d.t;
+        
+        updateCounterDisplay();
+    }
+
+    function updateCounterDisplay() {
+        let el = document.getElementById('d-count');
+        el.innerText = adhkarCount;
+        if(adhkarCount === 0) {
+            el.innerText = "✔";
+            el.classList.add('done');
+        } else {
+            el.classList.remove('done');
+        }
+    }
+
+    function countDhikr() {
+        if(adhkarCount > 0) {
+            adhkarCount--;
+            updateCounterDisplay();
+            if(navigator.vibrate) navigator.vibrate(50);
+            if(adhkarCount === 0) {
+                setTimeout(() => navDhikr(1), 500);
+            }
+        }
+    }
+
+    function navDhikr(dir) {
+        let next = adhkarIdx + dir;
+        if(next >= 0 && next < activeAdhkar.length) {
+            adhkarIdx = next;
+            loadDhikrUI();
+        } else if (next >= activeAdhkar.length) {
+            alert("انتهت القائمة");
+            show('adhkar-menu');
+        }
+    }
+
+    // === 5. فتح الملفات (Internal PDF) ===
+    function openInternalPdf(filename, backMenuId) {
+        show('pdf-viewer');
+        // تعيين مصدر iframe
+        document.getElementById('pdf-frame').src = filename;
+        
+        // ضبط زر الرجوع ليعود للقائمة الصحيحة
+        const backBtn = document.getElementById('pdf-back-btn');
+        backBtn.onclick = function() {
+            show(backMenuId);
+            // إفراغ المصدر لتوفير الذاكرة عند الخروج
+            document.getElementById('pdf-frame').src = "";
+        };
+    }
+
+    function pad(n) { return n.toString().padStart(3, '0'); }
+
+</script>
+
+</body>
+</html>
